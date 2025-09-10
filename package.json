@@ -1,0 +1,46 @@
+{
+  "name": "project-mgmt",
+  "version": "1.0.0",
+  "description": "This is a project management platform, backend focused, you can create your project, maintain notes etc. for more read readme",
+  "keywords": [
+    "backend",
+    "typescript",
+    "mongodb",
+    "express"
+  ],
+  "homepage": "https://github.com/tausiq2003/bp-2-project-mgmt#readme",
+  "bugs": {
+    "url": "https://github.com/tausiq2003/bp-2-project-mgmt/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tausiq2003/bp-2-project-mgmt.git"
+  },
+  "license": "MIT",
+  "author": "Tausiq Samantaray",
+  "type": "module",
+  "main": "src/server.ts",
+  "scripts": {
+    "dev": "nodemon -r dotenv/config --experimental-json-modules",
+    "build": "tsc -p .",
+    "start": "node dist/server.js",
+    "lint": "eslint \"src/**/*.ts\" --fix",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "mongoose": "^8.18.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.35.0",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.1",
+    "eslint": "^9.35.0",
+    "globals": "^16.4.0",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.43.0"
+  }
+}
