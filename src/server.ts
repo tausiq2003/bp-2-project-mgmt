@@ -1,12 +1,16 @@
-import express from "express";
+import app from "./app.ts";
+import "dotenv/config";
+import connectDB from "./db/index.ts";
 
-const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-app.get("/", (req, res) => {
-    res.send("hello");
-});
-
-app.listen(PORT, () => {
-    console.log(`Listening on port ${PORT}`);
-});
+connectDB()
+    .then(() => {
+        app.listen(PORT, () => {
+            console.log(`Server listening on ${PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.error("Mongodb connection error", err);
+        process.exit(1);
+    });

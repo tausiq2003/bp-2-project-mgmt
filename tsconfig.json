@@ -4,13 +4,17 @@
     // File Layout
     "rootDir": "./src",
     "outDir": "./dist",
+    "noEmit": false,
+    "noEmitOnError": true,
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
+    "module": "esnext",
     "target": "esnext",
     "types": ["node"],
-    "moduleResolution": "nodenext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
@@ -35,14 +39,14 @@
 
     // Recommended Options
     "strict": true,
-    "jsx": "react-jsx",
-    "verbatimModuleSyntax": true,
     "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "allowImportingTsExtensions": true
-  }
-  
-}
+    "skipDefaultLibCheck": true
 
+  },
+  "tsc-alias": {
+    "resolveFullPaths": true
+  }
+}
