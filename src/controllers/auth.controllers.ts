@@ -9,6 +9,7 @@ import {
     sendEmail,
 } from "../utils/mail";
 import {
+    cPValidator,
     fpRValidator,
     fpValidator,
     loginValidator,
@@ -326,5 +327,50 @@ export const resetForgotPassword = asyncHandler(async function (req, res) {
         throw new ApiError(400, "Validation failed", errorMessages);
     }
     const validationData = validationResult.data;
-    const { password } = validationData;
+    const { newPassword } = validationData;
+    const hashedToken = createHash("sha256").update(resetToken).digest("hex");
+    const user = await User.findOne({
+        forgotPasswordToken: hashedToken,
+        forgotPasswordExpiry: { $gt: Date.now() },
+    });
+    if (!user) {
+        throw new ApiError(489, "Token is invalid or expired");
+    }
+    user.forgotPasswordExpiry = undefined;
+    user.forgotPasswordToken = undefined;
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password reset successfully"));
+});
+export const changeCurrentPassword = asyncHandler(async function (req, res) {
+    const validationResult = await cPValidator.safeParseAsync(req.body);
+    if (!validationResult.success) {
+        const prettyErrors = validationResult.error.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message,
+            code: issue.code,
+        }));
+        const errorMessages = prettyErrors.map(
+            (error) => `${error.field}: ${error.message} (Code: ${error.code})`,
+        );
+        throw new ApiError(400, "Validation failed", errorMessages);
+    }
+    const validationData = validationResult.data;
+    const { oldPassword, newPassword } = validationData;
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+        throw new ApiError(404, "user not found");
+    }
+    const isPasswordValid = await user?.isPasswordCorrect(oldPassword);
+    if (!isPasswordValid) {
+        throw new ApiError(400, "Invalid old password");
+    }
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "Password changed successfully"));
 });

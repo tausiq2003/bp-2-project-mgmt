@@ -43,7 +43,7 @@ export const fpValidator = z.object({
     email: z.email(),
 });
 export const fpRValidator = z.object({
-    password: z
+    newPassword: z
         .string()
         .min(8, "Password must be at least 8 characters long")
         .max(64, "Password must be atmost 64 characters long")
@@ -55,3 +55,45 @@ export const fpRValidator = z.object({
             "Password must contain at least one special character.",
         ),
 });
+
+export const cPValidator = z
+    .object({
+        oldPassword: z
+            .string()
+            .min(8, "Password must be at least 8 characters long")
+            .max(64, "Password must be at most 64 characters long")
+            .regex(
+                /[a-z]/,
+                "Password must contain at least one lowercase letter.",
+            )
+            .regex(
+                /[A-Z]/,
+                "Password must contain at least one uppercase letter.",
+            )
+            .regex(/[0-9]/, "Password must contain at least one number.")
+            .regex(
+                /[^a-zA-Z0-9]/,
+                "Password must contain at least one special character.",
+            ),
+        newPassword: z
+            .string()
+            .min(8, "Password must be at least 8 characters long")
+            .max(64, "Password must be at most 64 characters long")
+            .regex(
+                /[a-z]/,
+                "Password must contain at least one lowercase letter.",
+            )
+            .regex(
+                /[A-Z]/,
+                "Password must contain at least one uppercase letter.",
+            )
+            .regex(/[0-9]/, "Password must contain at least one number.")
+            .regex(
+                /[^a-zA-Z0-9]/,
+                "Password must contain at least one special character.",
+            ),
+    })
+    .refine((data) => data.oldPassword !== data.newPassword, {
+        message: "New password is the same as old password",
+        path: ["newPassword"],
+    });
