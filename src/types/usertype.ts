@@ -6,6 +6,7 @@ export enum UserRolesEnum {
     "PROJECT_ADMIN" = "project_admin",
     "MEMBER" = "member",
 }
+export const AvailableUserRole = Object.values(UserRolesEnum);
 export enum TaskStatusEnum {
     "TODO" = "todo",
     "IN_PROGRESS" = "in_progress",
@@ -15,3 +16,4 @@ export enum TaskStatusEnum {
 export interface AuthenticatedRequest extends Request {
     user?: JwtPayload;
 }
+export const AvailableTaskStatues = Object.values(TaskStatusEnum);

@@ -1,10 +1,10 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { createHash, randomBytes } from "crypto";
 
 export interface UserDocument extends Document {
-    _id: string;
+    _id: Schema.Types.ObjectId;
     avatar: {
         url?: string | null;
         localPath?: string | null;
