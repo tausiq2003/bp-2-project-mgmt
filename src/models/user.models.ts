@@ -2,23 +2,23 @@ import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcrypt";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { createHash, randomBytes } from "crypto";
+import { AvailableUserRole, UserRolesEnum } from "../types/usertype";
 
 export interface UserDocument extends Document {
     _id: Schema.Types.ObjectId;
-    avatar: {
-        url?: string | null;
-        localPath?: string | null;
-    };
     username: string;
+    avatar: string;
     email: string;
     fullName?: string;
     password: string;
     isEmailVerified: boolean;
     refreshToken?: string;
-    forgotPasswordToken?: string;
-    forgotPasswordExpiry?: Date;
-    emailVerificationToken?: string;
-    emailVerificationExpiry?: Date;
+    forgotPasswordToken?: string | undefined;
+    forgotPasswordExpiry?: Date | undefined;
+    emailVerificationToken?: string | undefined;
+    emailVerificationExpiry?: Date | undefined;
+    requestCount: number;
+    role: UserRolesEnum;
 
     isPasswordCorrect(password: string): Promise<boolean>;
     generateAccessToken(): string;
@@ -32,16 +32,6 @@ export interface UserDocument extends Document {
 
 const userSchema = new Schema(
     {
-        avatar: {
-            type: {
-                url: String,
-                localPath: String,
-            },
-            default: {
-                url: `https://placehold.co/200x200`,
-                localPath: "",
-            },
-        },
         username: {
             type: String,
             required: true,
@@ -49,6 +39,11 @@ const userSchema = new Schema(
             lowercase: true,
             trim: true,
             index: true,
+        },
+        avatar: {
+            type: String,
+            required: true,
+            default: "https://placehold.co/100",
         },
         email: {
             type: String,
@@ -83,6 +78,15 @@ const userSchema = new Schema(
         },
         emailVerificationExpiry: {
             type: Date,
+        },
+        requestCount: {
+            type: Number,
+            default: 0,
+        },
+        role: {
+            type: String,
+            enum: AvailableUserRole,
+            default: UserRolesEnum.NONE,
         },
     },
     { timestamps: true },

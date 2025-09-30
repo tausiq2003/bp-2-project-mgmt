@@ -88,18 +88,19 @@ Project Camp Backend is a RESTful API service designed to support collaborative 
 - `POST /forgot-password` - Request password reset
 - `POST /reset-password/:resetToken` - Reset forgotten password
 - `POST /resend-email-verification` - Resend verification email (secured)
+- `PATCH /update-account` - Update account details
 
 **Project Routes** (`/api/v1/projects/`)
 
 - `GET /` - List user projects (secured)
-- `POST /` - Create project (secured)
-- `GET /:projectId` - Get project details (secured, role-based)
-- `PUT /:projectId` - Update project (secured, Admin only)
+- `POST /` - Create project (secured, Admin only)
+- `GET /:projectId` - Get project details (secured, role-based) 
+- `PUT /:projectId` - Update project (secured, Admin and Project Admin only)
 - `DELETE /:projectId` - Delete project (secured, Admin only)
 - `GET /:projectId/members` - List project members (secured)
-- `POST /:projectId/members` - Add project member (secured, Admin only)
-- `PUT /:projectId/members/:userId` - Update member role (secured, Admin only)
-- `DELETE /:projectId/members/:userId` - Remove member (secured, Admin only)
+- `POST /:projectId/members` - Add project member (secured, Project Admin  and Admin only)
+- `PUT /:projectId/members/:userId` - Update member role(can promote or demote) (secured, Admin only)
+- `DELETE /:projectId/members/:userId` - Remove member (secured, Project Admin and Admin only)
 
 **Task Routes** (`/api/v1/tasks/`)
 
@@ -145,6 +146,7 @@ Project Camp Backend is a RESTful API service designed to support collaborative 
 - `admin` - Full system access
 - `project_admin` - Project-level administrative access
 - `member` - Basic project member access
+- `none`- Access to nothing, a project-admin is none to another project, if not specified, all members are none to another project, if not specified
 
 **Task Status:**
 

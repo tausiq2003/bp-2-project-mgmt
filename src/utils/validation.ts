@@ -16,8 +16,7 @@ export default async function validatePayload<T extends z.ZodRawShape>(
         );
         console.log(errorMessages);
 
-        // Return errorMessages directly as string array, not wrapped in object
-        return { error: errorMessages }; // This should be string[], not string
+        return { error: errorMessages };
     }
     const validationData = validationResult.data;
     return validationData;

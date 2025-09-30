@@ -1,4 +1,4 @@
-import { asyncWrapProviders } from "async_hooks";
+import { type ObjectId } from "mongoose";
 import { User } from "../models/user.models";
 import ApiError from "../utils/api-error";
 import ApiResponse from "../utils/api-response";
@@ -8,6 +8,7 @@ import {
     forgotPasswordMailgenContent,
     sendEmail,
 } from "../utils/mail";
+import validatePayload from "../utils/validation";
 import {
     cPValidator,
     fpRValidator,
@@ -16,9 +17,9 @@ import {
     registerValidator,
 } from "../validators/auth.validators";
 import { createHash } from "crypto";
-import jwt from "jsonwebtoken";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 
-async function generateAccessAndRefreshTokens(userId: string) {
+async function generateAccessAndRefreshTokens(userId: ObjectId) {
     try {
         const user = await User.findById(userId);
         if (!user) {
@@ -43,19 +44,10 @@ async function generateAccessAndRefreshTokens(userId: string) {
 }
 
 export const registerUserController = asyncHandler(async function (req, res) {
-    const validationResult = await registerValidator.safeParseAsync(req.body);
-    if (!validationResult.success) {
-        const prettyErrors = validationResult.error.issues.map((issue) => ({
-            field: issue.path.join("."),
-            message: issue.message,
-            code: issue.code,
-        }));
-        const errorMessages = prettyErrors.map(
-            (error) => `${error.field}: ${error.message} (Code: ${error.code})`,
-        );
-        throw new ApiError(400, "Validation failed", errorMessages);
+    const validationData = await validatePayload(registerValidator, req.body);
+    if ("error" in validationData) {
+        throw new ApiError(400, "Validation failed", validationData.error);
     }
-    const validationData = validationResult.data;
     const { email, password, username } = validationData;
 
     const existedUser = await User.findOne({ $or: [{ username }, { email }] });
@@ -79,7 +71,7 @@ export const registerUserController = asyncHandler(async function (req, res) {
         subject: "Please verify your email",
         mailgenContent: emailVerificationMailgenContent(
             user.username,
-            `${req.protocol}://${req.get("host")}/api/v1/users/verify-email/${unHashedToken}`,
+            `${req.protocol}://${req.get("host")}/api/v1/auth/verify-email/${unHashedToken}`,
         ),
     });
     const createdUser = await User.findById(user._id).select(
@@ -100,19 +92,10 @@ export const registerUserController = asyncHandler(async function (req, res) {
 });
 
 export const loginUserController = asyncHandler(async function (req, res) {
-    const validationResult = await loginValidator.safeParseAsync(req.body);
-    if (!validationResult.success) {
-        const prettyErrors = validationResult.error.issues.map((issue) => ({
-            field: issue.path.join("."),
-            message: issue.message,
-            code: issue.code,
-        }));
-        const errorMessages = prettyErrors.map(
-            (error) => `${error.field}: ${error.message} (Code: ${error.code})`,
-        );
-        throw new ApiError(400, "Validation failed", errorMessages);
+    const validationData = await validatePayload(loginValidator, req.body);
+    if ("error" in validationData) {
+        throw new ApiError(400, "Validation failed", validationData.error);
     }
-    const validationData = validationResult.data;
     const { email, password } = validationData;
     const user = await User.findOne({ email });
 
@@ -147,6 +130,7 @@ export const loginUserController = asyncHandler(async function (req, res) {
         );
 });
 export const logoutUserController = asyncHandler(async function (req, res) {
+    console.log("hellowrld");
     await User.findByIdAndUpdate(
         req.user?._id,
         { $set: { refreshToken: "" } },
@@ -219,7 +203,7 @@ export const resendEmailVerification = asyncHandler(async function (req, res) {
         subject: "Please verify your email",
         mailgenContent: emailVerificationMailgenContent(
             user.username,
-            `${req.protocol}://${req.get("host")}/api/v1/users/verify-email/${unHashedToken}`,
+            `${req.protocol}://${req.get("host")}/api/v1/auth/verify-email/${unHashedToken}`,
         ),
     });
     return res.status(200).json(new ApiResponse(200, {}, "Mail has been sent"));
@@ -236,7 +220,7 @@ export const refreshAccessToken = asyncHandler(async function (req, res) {
         const decodedToken = jwt.verify(
             incomingRefreshToken,
             process.env.REFRESH_TOKEN_SECRET! as string,
-        );
+        ) as JwtPayload;
         const user = await User.findById(decodedToken?._id);
         if (!user) {
             throw new ApiError(401, "Invalid refresh token");
@@ -247,7 +231,7 @@ export const refreshAccessToken = asyncHandler(async function (req, res) {
         const options = {
             httpOnly: true,
             secure: true,
-            sameSite: "strict",
+            sameSite: "strict" as const,
         };
         const { accessToken, refreshToken: newRefreshToken } =
             await generateAccessAndRefreshTokens(user._id);
@@ -256,7 +240,7 @@ export const refreshAccessToken = asyncHandler(async function (req, res) {
         return res
             .status(200)
             .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
+            .cookie("refreshToken", newRefreshToken, options)
             .json(
                 new ApiResponse(
                     200,
@@ -270,19 +254,10 @@ export const refreshAccessToken = asyncHandler(async function (req, res) {
     }
 });
 export const forgotPasswordRequest = asyncHandler(async function (req, res) {
-    const validationResult = await fpValidator.safeParseAsync(req.body);
-    if (!validationResult.success) {
-        const prettyErrors = validationResult.error.issues.map((issue) => ({
-            field: issue.path.join("."),
-            message: issue.message,
-            code: issue.code,
-        }));
-        const errorMessages = prettyErrors.map(
-            (error) => `${error.field}: ${error.message} (Code: ${error.code})`,
-        );
-        throw new ApiError(400, "Validation failed", errorMessages);
+    const validationData = await validatePayload(fpValidator, req.body);
+    if ("error" in validationData) {
+        throw new ApiError(400, "Validation failed", validationData.error);
     }
-    const validationData = validationResult.data;
     const { email } = validationData;
     const user = await User.findOne({ email });
     if (!user) {
@@ -298,7 +273,7 @@ export const forgotPasswordRequest = asyncHandler(async function (req, res) {
         subject: "Password reset",
         mailgenContent: forgotPasswordMailgenContent(
             user.username,
-            `${process.env.FORGOT_PASSWORD_REDIRECT_URL}/${unHashedToken}`,
+            `${process.env.FORGOT_PASSWORD_REDIRECT}/${unHashedToken}`,
         ),
     });
     return res
@@ -314,20 +289,14 @@ export const forgotPasswordRequest = asyncHandler(async function (req, res) {
 
 export const resetForgotPassword = asyncHandler(async function (req, res) {
     const { resetToken } = req.params;
-    const validationResult = await fpRValidator.safeParseAsync(req.body);
-    if (!validationResult.success) {
-        const prettyErrors = validationResult.error.issues.map((issue) => ({
-            field: issue.path.join("."),
-            message: issue.message,
-            code: issue.code,
-        }));
-        const errorMessages = prettyErrors.map(
-            (error) => `${error.field}: ${error.message} (Code: ${error.code})`,
-        );
-        throw new ApiError(400, "Validation failed", errorMessages);
+    const validationData = await validatePayload(fpRValidator, req.body);
+    if ("error" in validationData) {
+        throw new ApiError(400, "Validation failed", validationData.error);
     }
-    const validationData = validationResult.data;
     const { newPassword } = validationData;
+    if (!resetToken) {
+        throw new ApiError(404, "Reset token not found");
+    }
     const hashedToken = createHash("sha256").update(resetToken).digest("hex");
     const user = await User.findOne({
         forgotPasswordToken: hashedToken,
@@ -346,19 +315,10 @@ export const resetForgotPassword = asyncHandler(async function (req, res) {
         .json(new ApiResponse(200, {}, "Password reset successfully"));
 });
 export const changeCurrentPassword = asyncHandler(async function (req, res) {
-    const validationResult = await cPValidator.safeParseAsync(req.body);
-    if (!validationResult.success) {
-        const prettyErrors = validationResult.error.issues.map((issue) => ({
-            field: issue.path.join("."),
-            message: issue.message,
-            code: issue.code,
-        }));
-        const errorMessages = prettyErrors.map(
-            (error) => `${error.field}: ${error.message} (Code: ${error.code})`,
-        );
-        throw new ApiError(400, "Validation failed", errorMessages);
+    const validationData = await validatePayload(cPValidator, req.body);
+    if ("error" in validationData) {
+        throw new ApiError(400, "Validation failed", validationData.error);
     }
-    const validationData = validationResult.data;
     const { oldPassword, newPassword } = validationData;
     const user = await User.findById(req.user?._id);
     if (!user) {

@@ -10,6 +10,7 @@ import {
     getCurrentUser,
     changeCurrentPassword,
     resendEmailVerification,
+    updateAccount,
 } from "../controllers/auth.controllers";
 import { verifyJwt } from "../middlewares/auth.middlewares";
 
@@ -24,10 +25,11 @@ authRouter.route("/reset-password/:resetToken").post(resetForgotPassword);
 
 //secure routes
 authRouter.route("/logout").post(verifyJwt, logoutUserController);
-authRouter.route("/current-user").post(verifyJwt, getCurrentUser);
+authRouter.route("/current-user").get(verifyJwt, getCurrentUser);
 authRouter.route("/change-password").post(verifyJwt, changeCurrentPassword);
 authRouter
     .route("/resend-email-verification")
     .post(verifyJwt, resendEmailVerification);
+authRouter.route("/update-account").patch(verifyJwt, updateAccount);
 
 export default authRouter;

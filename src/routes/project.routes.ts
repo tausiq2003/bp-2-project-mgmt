@@ -10,14 +10,11 @@ import {
     deleteProject,
     updateMemberRole,
 } from "../controllers/project.controllers";
-import {
-    verifyJWT,
-    validateProjectPermission,
-} from "../middlewares/auth.middlewares";
+import { verifyJwt } from "../middlewares/auth.middlewares";
 import { AvailableUserRole, UserRolesEnum } from "../types/usertype";
 
 const projectRouter = Router();
-projectRouter.use(verifyJWT);
+projectRouter.use(verifyJwt);
 
 projectRouter.route("/").get(getProjects).post(createProject);
 
