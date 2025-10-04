@@ -17,7 +17,6 @@ export interface UserDocument extends Document {
     forgotPasswordExpiry?: Date | undefined;
     emailVerificationToken?: string | undefined;
     emailVerificationExpiry?: Date | undefined;
-    requestCount: number;
     role: UserRolesEnum;
 
     isPasswordCorrect(password: string): Promise<boolean>;
@@ -79,14 +78,10 @@ const userSchema = new Schema(
         emailVerificationExpiry: {
             type: Date,
         },
-        requestCount: {
-            type: Number,
-            default: 0,
-        },
         role: {
             type: String,
             enum: AvailableUserRole,
-            default: UserRolesEnum.NONE,
+            default: UserRolesEnum.NORMAL,
         },
     },
     { timestamps: true },

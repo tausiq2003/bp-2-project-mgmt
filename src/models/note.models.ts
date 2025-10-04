@@ -4,7 +4,8 @@ interface NoteDocument extends Document {
     _id: Schema.Types.ObjectId;
     project: Schema.Types.ObjectId;
     createdBy: Schema.Types.ObjectId;
-    content: Schema.Types.ObjectId;
+    title: string;
+    content: string;
 }
 
 const projectNoteSchema = new Schema(
@@ -17,6 +18,10 @@ const projectNoteSchema = new Schema(
         createdBy: {
             type: Schema.Types.ObjectId,
             ref: "User",
+            required: true,
+        },
+        title: {
+            type: String,
             required: true,
         },
         content: {

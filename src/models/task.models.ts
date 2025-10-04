@@ -4,7 +4,7 @@ import { AvailableTaskStatues, TaskStatusEnum } from "../types/usertype";
 interface TaskDocument extends Document {
     _id: Schema.Types.ObjectId;
     title: string;
-    description?: string;
+    description: string;
     project: Schema.Types.ObjectId;
     assignedTo: Schema.Types.ObjectId;
     assignedBy: Schema.Types.ObjectId;
@@ -29,7 +29,10 @@ const taskSchema = new Schema(
             required: true,
             trim: true,
         },
-        description: String,
+        description: {
+            type: String,
+            required: true,
+        },
         project: {
             type: Schema.Types.ObjectId,
             ref: "Project",

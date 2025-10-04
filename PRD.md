@@ -92,19 +92,19 @@ Project Camp Backend is a RESTful API service designed to support collaborative 
 
 **Project Routes** (`/api/v1/projects/`)
 
-- `GET /` - List user projects (secured)
-- `POST /` - Create project (secured, Admin only)
+- `GET /` - List user projects (secured, role-based)
+- `POST /` - Create project (secured, anyone can create and become project_admin)
 - `GET /:projectId` - Get project details (secured, role-based) 
-- `PUT /:projectId` - Update project (secured, Admin and Project Admin only)
+- `PUT /:projectId` - Update project (secured, Admin and Project Admin of that project)
 - `DELETE /:projectId` - Delete project (secured, Admin only)
-- `GET /:projectId/members` - List project members (secured)
-- `POST /:projectId/members` - Add project member (secured, Project Admin  and Admin only)
+- `GET /:projectId/members` - List project members (secured, role based)
+- `POST /:projectId/members` - Add project member (secured, Admin only)
 - `PUT /:projectId/members/:userId` - Update member role(can promote or demote) (secured, Admin only)
-- `DELETE /:projectId/members/:userId` - Remove member (secured, Project Admin and Admin only)
+- `DELETE /:projectId/members/:userId` - Remove member (secured, Admin only)
 
 **Task Routes** (`/api/v1/tasks/`)
 
-- `GET /:projectId` - List project tasks (secured, role-based)
+ `GET /:projectId` - List project tasks (secured, role-based)
 - `POST /:projectId` - Create task (secured, Admin/Project Admin)
 - `GET /:projectId/t/:taskId` - Get task details (secured, role-based)
 - `PUT /:projectId/t/:taskId` - Update task (secured, Admin/Project Admin)
@@ -129,8 +129,9 @@ Project Camp Backend is a RESTful API service designed to support collaborative 
 
 | Feature                    | Admin | Project Admin | Member |
 | -------------------------- | ----- | ------------- | ------ |
-| Create Project             | ✓     | ✗             | ✗      |
-| Update/Delete Project      | ✓     | ✗             | ✗      |
+| Create Project             | ✓     | ✓             | ✗      |
+| Update Project             | ✓     | ✓/✗           | ✗      |
+| Delete Project             | ✓     | ✗             | ✗      |
 | Manage Project Members     | ✓     | ✗             | ✗      |
 | Create/Update/Delete Tasks | ✓     | ✓             | ✗      |
 | View Tasks                 | ✓     | ✓             | ✓      |
@@ -146,7 +147,7 @@ Project Camp Backend is a RESTful API service designed to support collaborative 
 - `admin` - Full system access
 - `project_admin` - Project-level administrative access
 - `member` - Basic project member access
-- `none`- Access to nothing, a project-admin is none to another project, if not specified, all members are none to another project, if not specified
+- `normal` - It is needed because admin can't be project-scoped and its universal so normal is anybody project_admin or member or not a member of the project
 
 **Task Status:**
 

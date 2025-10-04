@@ -15,9 +15,11 @@ import {
     fpValidator,
     loginValidator,
     registerValidator,
+    updateAccountValidator,
 } from "../validators/auth.validators";
 import { createHash } from "crypto";
 import jwt, { type JwtPayload } from "jsonwebtoken";
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary";
 
 async function generateAccessAndRefreshTokens(userId: ObjectId) {
     try {
@@ -28,9 +30,6 @@ async function generateAccessAndRefreshTokens(userId: ObjectId) {
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();
 
-        if (!user) {
-            throw new ApiError(404, "User not found");
-        }
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false });
         return { accessToken, refreshToken };
@@ -55,16 +54,30 @@ export const registerUserController = asyncHandler(async function (req, res) {
     if (existedUser) {
         throw new ApiError(409, "User with email or username exists.");
     }
+    let avatarUrl = "https://placehold.co/100";
+    const avatarLocalPath = req.file?.path;
+    if (avatarLocalPath) {
+        if (!req.file?.mimetype.startsWith("image/")) {
+            throw new ApiError(400, "Only image files are allowed");
+        }
+        const avatarRes = await uploadOnCloudinary(avatarLocalPath);
+        if (!avatarRes?.url) {
+            throw new ApiError(400, "Error while uploading avatar");
+        }
+        avatarUrl = avatarRes.url;
+    }
     const user = await User.create({
         email,
         password,
         username,
+        avatar: avatarUrl,
         isEmailVerified: false,
     });
     const { unHashedToken, hashedToken, tokenExpiry } =
         user.generateTemporaryToken();
     user.emailVerificationToken = hashedToken;
     user.emailVerificationExpiry = tokenExpiry as unknown as Date;
+
     await user.save({ validateBeforeSave: false });
     await sendEmail({
         email: user?.email,
@@ -130,7 +143,6 @@ export const loginUserController = asyncHandler(async function (req, res) {
         );
 });
 export const logoutUserController = asyncHandler(async function (req, res) {
-    console.log("hellowrld");
     await User.findByIdAndUpdate(
         req.user?._id,
         { $set: { refreshToken: "" } },
@@ -303,7 +315,7 @@ export const resetForgotPassword = asyncHandler(async function (req, res) {
         forgotPasswordExpiry: { $gt: Date.now() },
     });
     if (!user) {
-        throw new ApiError(489, "Token is invalid or expired");
+        throw new ApiError(400, "Token is invalid or expired");
     }
     user.forgotPasswordExpiry = undefined;
     user.forgotPasswordToken = undefined;
@@ -333,4 +345,61 @@ export const changeCurrentPassword = asyncHandler(async function (req, res) {
     return res
         .status(200)
         .json(new ApiResponse(200, {}, "Password changed successfully"));
+});
+export const updateAccount = asyncHandler(async function (req, res) {
+    const validationData = await validatePayload(
+        updateAccountValidator,
+        req.body,
+    );
+    if ("error" in validationData) {
+        throw new ApiError(400, "Validation failed", validationData.error);
+    }
+    const userId = req.user?._id;
+    if (!userId) {
+        throw new ApiError(401, "Unauthorized request");
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+    const { username } = validationData;
+    const avatarLocalPath = req.file?.path;
+    if (!username && !avatarLocalPath) {
+        throw new ApiError(
+            400,
+            "Can't proceed ahead because both username and avatar files are missing",
+        );
+    }
+    if (username && username !== user.username) {
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            throw new ApiError(409, "Username already taken");
+        }
+        user.username = username;
+    }
+
+    let oldAvatarUrl = null;
+    if (avatarLocalPath) {
+        if (!req.file?.mimetype.startsWith("image/")) {
+            throw new ApiError(400, "Only image files are allowed");
+        }
+        oldAvatarUrl = user.avatar;
+        const avatarRes = await uploadOnCloudinary(avatarLocalPath);
+        if (!avatarRes?.url) {
+            throw new ApiError(400, "Error while uploading avatar");
+        }
+        user.avatar = avatarRes.url;
+    }
+
+    await user.save();
+
+    if (oldAvatarUrl) {
+        deleteFromCloudinary(oldAvatarUrl, "image").catch((err) =>
+            console.error("Failed to delete old avatar:", err),
+        );
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, {}, "User updated successfully"));
 });

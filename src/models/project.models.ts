@@ -3,7 +3,7 @@ import mongoose, { Document, Schema } from "mongoose";
 interface ProjectDocument extends Document {
     _id: Schema.Types.ObjectId;
     name: string;
-    description?: string;
+    description: string;
     createdBy: Schema.Types.ObjectId;
 }
 
@@ -17,6 +17,7 @@ const projectSchema = new Schema(
         },
         description: {
             type: String,
+            required: true,
         },
         createdBy: {
             type: Schema.Types.ObjectId,

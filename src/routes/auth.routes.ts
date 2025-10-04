@@ -13,10 +13,13 @@ import {
     updateAccount,
 } from "../controllers/auth.controllers";
 import { verifyJwt } from "../middlewares/auth.middlewares";
+import { upload } from "../middlewares/multer.middlewares";
 
 const authRouter = Router();
 
-authRouter.route("/register").post(registerUserController);
+authRouter
+    .route("/register")
+    .post(upload.single("avatar"), registerUserController);
 authRouter.route("/login").post(loginUserController);
 authRouter.route("/verify-email/:verificationToken").get(verifyEmail);
 authRouter.route("/refresh-token").post(refreshAccessToken);
@@ -30,6 +33,8 @@ authRouter.route("/change-password").post(verifyJwt, changeCurrentPassword);
 authRouter
     .route("/resend-email-verification")
     .post(verifyJwt, resendEmailVerification);
-authRouter.route("/update-account").patch(verifyJwt, updateAccount);
+authRouter
+    .route("/update-account")
+    .patch(verifyJwt, upload.single("avatar"), updateAccount);
 
 export default authRouter;

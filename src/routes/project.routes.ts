@@ -10,7 +10,10 @@ import {
     deleteProject,
     updateMemberRole,
 } from "../controllers/project.controllers";
-import { verifyJwt } from "../middlewares/auth.middlewares";
+import {
+    verifyJwt,
+    validateProjectPermission,
+} from "../middlewares/auth.middlewares";
 import { AvailableUserRole, UserRolesEnum } from "../types/usertype";
 
 const projectRouter = Router();
@@ -20,7 +23,14 @@ projectRouter.route("/").get(getProjects).post(createProject);
 
 projectRouter
     .route("/:projectId")
-    .get(validateProjectPermission(AvailableUserRole), getProjectById)
+    .get(
+        validateProjectPermission([
+            UserRolesEnum.MEMBER,
+            UserRolesEnum.PROJECT_ADMIN,
+            UserRolesEnum.ADMIN,
+        ]),
+        getProjectById,
+    )
     .put(validateProjectPermission([UserRolesEnum.ADMIN]), updateProject)
     .delete(validateProjectPermission([UserRolesEnum.ADMIN]), deleteProject);
 

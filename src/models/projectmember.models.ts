@@ -5,11 +5,7 @@ interface ProjectMemberDocument extends Document {
     _id: Schema.Types.ObjectId;
     user: Schema.Types.ObjectId;
     project: Schema.Types.ObjectId;
-    role: {
-        type: StringConstructor;
-        enum: UserRolesEnum[];
-        default: UserRolesEnum;
-    };
+    role: UserRolesEnum;
 }
 const projectMemberSchema = new Schema(
     {
