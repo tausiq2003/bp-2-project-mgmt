@@ -19,7 +19,7 @@ export const verifyJwt = asyncHandler(async (req, _, next) => {
             process.env.ACCESS_TOKEN_SECRET! as string,
         ) as JwtPayload;
         const user = await User.findById(decodedToken?._id).select(
-            "-password -refreshToken -emailVerificationToken -emailVerifcationExpiry",
+            "-password -refreshToken -emailVerificationToken -emailVerificationExpiry",
         );
         if (!user) {
             throw new ApiError(401, "Invalid access token");
@@ -36,38 +36,39 @@ export const verifyJwt = asyncHandler(async (req, _, next) => {
 });
 
 export const validateProjectPermission = (roles: UserRolesEnum[] = []) => {
-    asyncHandler(async (req, _res, next) => {
+    return asyncHandler(async (req, _res, next) => {
         const { projectId } = req.params;
 
         if (!req.user) {
             throw new ApiError(401, "Unauthorized request");
         }
         if (!projectId) {
-            throw new ApiError(400, "project id is missing");
+            throw new ApiError(400, "Project id is missing");
         }
         if (req.user.role === UserRolesEnum.ADMIN) {
-            next();
+            return next();
         }
 
-        const project = await ProjectMember.findOne({
+        const projectMember = await ProjectMember.findOne({
             project: new mongoose.Types.ObjectId(projectId),
             user: new mongoose.Types.ObjectId(`${req.user._id}`),
         });
 
-        if (!project) {
-            throw new ApiError(400, "project not found");
+        if (!projectMember) {
+            throw new ApiError(403, "You are not a member of this project");
         }
 
-        const givenRole = project.role;
+        const memberRole = projectMember.role;
 
-        if (!roles.includes(givenRole)) {
+        if (!roles.includes(memberRole)) {
             throw new ApiError(
                 403,
                 "You do not have permission to perform this action",
             );
         }
-        req.user.role = givenRole;
 
+        // Update user role to project-specific role
+        req.user.role = memberRole;
         next();
     });
 };

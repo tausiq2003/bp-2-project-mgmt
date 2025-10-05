@@ -8,19 +8,12 @@ interface TaskDocument extends Document {
     project: Schema.Types.ObjectId;
     assignedTo: Schema.Types.ObjectId;
     assignedBy: Schema.Types.ObjectId;
-    status: {
-        type: StringConstructor;
-        enum: TaskStatusEnum[];
-        default: TaskStatusEnum;
-    };
+    status: TaskStatusEnum;
     attachments: {
-        type: {
-            url: StringConstructor;
-            mimetype: StringConstructor;
-            size: NumberConstructor;
-        }[];
-        default: never[];
-    };
+        url: string;
+        mimetype: string;
+        size: number;
+    }[];
 }
 const taskSchema = new Schema(
     {
@@ -51,18 +44,32 @@ const taskSchema = new Schema(
             enum: AvailableTaskStatues,
             default: TaskStatusEnum.TODO,
         },
-        attachments: {
-            type: [
-                {
-                    url: String,
-                    mimetype: String,
-                    size: Number,
+        attachments: [
+            {
+                url: {
+                    type: String,
+                    required: true,
                 },
-            ],
-            default: [],
-        },
+                mimetype: {
+                    type: String,
+                    required: true,
+                    validate: {
+                        validator: function (v: string) {
+                            return (
+                                v === "text/markdown" || v === "text/x-markdown"
+                            );
+                        },
+                        message: "Only markdown files are allowed",
+                    },
+                },
+                size: {
+                    type: Number,
+                    required: true,
+                },
+            },
+        ],
     },
     { timestamps: true },
 );
 
-export const Taks = mongoose.model<TaskDocument>("Task", taskSchema);
+export const Task = mongoose.model<TaskDocument>("Task", taskSchema);

@@ -23,9 +23,23 @@ export const getProjects = asyncHandler(async function (req, res) {
         {
             $lookup: {
                 from: "projects",
-                localField: "projects",
+                localField: "project",
                 foreignField: "_id",
-                as: "projects",
+                as: "projectDetails",
+            },
+        },
+        {
+            $unwind: "$projectDetails",
+        },
+        {
+            $project: {
+                _id: 1,
+                role: 1,
+                "projectDetails._id": 1,
+                "projectDetails.name": 1,
+                "projectDetails.description": 1,
+                "projectDetails.createdBy": 1,
+                "projectDetails.createdAt": 1,
             },
         },
     ]);
@@ -169,7 +183,7 @@ export const deleteProject = asyncHandler(async function (req, res) {
         if (!deletedProject) {
             throw new ApiError(404, "Project not found");
         }
-        const deletedMembers = await Project.deleteMany(
+        const deletedMembers = await ProjectMember.deleteMany(
             {
                 project: projectId,
             },
@@ -253,8 +267,7 @@ export const addMembersToProject = asyncHandler(async function (req, res) {
 export const updateMemberRole = asyncHandler(async function (req, res) {
     //promote to project admin if its member
     // demote to member if its project admin
-    const { projectId } = req.params;
-    const { userId } = req.body;
+    const { projectId, userId } = req.params;
 
     if (!isValidObjectId(projectId)) {
         throw new ApiError(400, "Not valid project id");
@@ -301,8 +314,7 @@ export const updateMemberRole = asyncHandler(async function (req, res) {
     throw new ApiError(404, "User role not found");
 });
 export const deleteMember = asyncHandler(async function (req, res) {
-    const { projectId } = req.params;
-    const { userId } = req.body;
+    const { projectId, userId } = req.params;
 
     if (!isValidObjectId(projectId)) {
         throw new ApiError(400, "Not valid project id");

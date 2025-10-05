@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from "mongoose";
 interface SubTaskSchemaDocument extends Document {
     _id: Schema.Types.ObjectId;
     title: string;
+    description: string;
     task: Schema.Types.ObjectId;
     isCompleted: boolean;
     createdBy: Schema.Types.ObjectId;
@@ -14,6 +15,10 @@ const subTaskSchema = new Schema(
             type: String,
             required: true,
             trim: true,
+        },
+        description: {
+            type: String,
+            required: true,
         },
         task: {
             type: Schema.Types.ObjectId,

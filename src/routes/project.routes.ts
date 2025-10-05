@@ -14,7 +14,7 @@ import {
     verifyJwt,
     validateProjectPermission,
 } from "../middlewares/auth.middlewares";
-import { AvailableUserRole, UserRolesEnum } from "../types/usertype";
+import { UserRolesEnum } from "../types/usertype";
 
 const projectRouter = Router();
 projectRouter.use(verifyJwt);

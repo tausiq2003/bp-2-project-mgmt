@@ -6,6 +6,8 @@ import cookieParser from "cookie-parser";
 import projectRouter from "./routes/project.routes";
 import ApiError from "./utils/api-error";
 import type { AuthenticatedRequest } from "./types/usertype";
+import tasksRouter from "./routes/tasks.routes";
+import notesRouter from "./routes/notes.routes";
 
 const app = express();
 
@@ -26,6 +28,8 @@ app.use(
 app.use("/api/v1/healthcheck", healthCheckRouter);
 app.use("/api/v1/projects", projectRouter);
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/tasks", tasksRouter);
+app.use("/api/v1/notes", notesRouter);
 app.use(
     (
         err: Error,
